@@ -3,6 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.zouguo.iothumtemp.MainActivity">
     <item
+        android:id="@+id/action_changeview"
+        android:title="@string/action_view"
+        android:icon="@mipmap/icon_unfold"
+        app:showAsAction="always"/>
+
+    <item
         android:id="@+id/action_records"
         android:orderInCategory="100"
         android:title="@string/action_records"

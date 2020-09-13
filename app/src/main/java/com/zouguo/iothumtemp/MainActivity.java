@@ -4,12 +4,15 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -21,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -43,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
     private RecyclerView main_rcv_listdevices;
     private FloatingActionButton main_fab_adddevice;
 
+    private SharedPreferences sharedPreferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,9 +65,19 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
         iotRecvlistAdapter = new IOTRecvlistAdapter(MainActivity.this, iotDeviceInfosList);
         main_rcv_listdevices.setAdapter(iotRecvlistAdapter);
 
-        LinearLayoutManager llm = new LinearLayoutManager(MainActivity.this);
-        llm.setOrientation(LinearLayoutManager.VERTICAL);
-        main_rcv_listdevices.setLayoutManager(llm);
+        //判断是否设置过布局格式
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        int viewTypeIndex = sharedPreferences.getInt("your_style_view", 0);
+        if(viewTypeIndex == 0){
+            iotRecvlistAdapter.changeView(0);
+            LinearLayoutManager llm = new LinearLayoutManager(MainActivity.this);
+            llm.setOrientation(LinearLayoutManager.VERTICAL);
+            main_rcv_listdevices.setLayoutManager(llm);
+        }else if(viewTypeIndex == 1){
+            iotRecvlistAdapter.changeView(1);
+            GridLayoutManager gm = new GridLayoutManager(MainActivity.this, 2);
+            main_rcv_listdevices.setLayoutManager(gm);
+        }
 
         iotRecvlistAdapter.setOnItemListener(new IOTRecvlistAdapter.OnItemListener() {
             @Override
@@ -342,6 +358,25 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()){
+            case R.id.action_changeview:
+                RecyclerView.LayoutManager layoutManager = main_rcv_listdevices.getLayoutManager();
+
+                int viewTypeIndex = 0;
+                if(layoutManager instanceof GridLayoutManager){
+                    iotRecvlistAdapter.changeView(0);
+                    LinearLayoutManager llm = new LinearLayoutManager(MainActivity.this);
+                    llm.setOrientation(LinearLayoutManager.VERTICAL);
+                    main_rcv_listdevices.setLayoutManager(llm);
+                }else if(layoutManager instanceof LinearLayoutManager){
+                    iotRecvlistAdapter.changeView(1);
+                    GridLayoutManager gm = new GridLayoutManager(MainActivity.this, 2);
+                    main_rcv_listdevices.setLayoutManager(gm);
+
+                    viewTypeIndex = 1;
+                }
+
+                sharedPreferences.edit().putInt("your_style_view", viewTypeIndex).apply();
+                break;
             case R.id.action_records:
                 break;
             case R.id.action_update:
@@ -413,10 +448,19 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
                 if(deviceNode.contains("_temperature")){
                     Log.d("zouguo","更新温度");
 
+                    RecyclerView.LayoutManager rvlm = main_rcv_listdevices.getLayoutManager();
+
+                    String format_tem = "0";
+                    if(rvlm instanceof GridLayoutManager){
+                        format_tem = message.substring(0, message.indexOf("."));
+                    }else {
+                        format_tem = message;
+                    }
+
                     //温度
                     payloadList.add(0,"state");
                     payloadList.add(1,0);//标记位--温度
-                    payloadList.add(2,message + "℃");
+                    payloadList.add(2,format_tem + "℃");
                     payloadList.add(3, fTime);
 
                     iotRecvlistAdapter.notifyItemChanged(nodeIndex, payloadList);
