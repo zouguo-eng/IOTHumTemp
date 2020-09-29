@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
@@ -26,6 +27,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.zouguo.iothumtemp.adapter.IOTRecvlistAdapter;
@@ -106,6 +108,8 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
                 dialog.getWindow().setAttributes(p);
 
                 final Spinner node_type = dialogAddDeviceView.findViewById(R.id.view_dialog_node_type_sp);
+                TextView dialog_title = dialogAddDeviceView.findViewById(R.id.view_dialog_control_title);
+                dialog_title.setText("更新设备");
                 final EditText node_label = dialogAddDeviceView.findViewById(R.id.view_dialog_node_label_et);
                 final EditText node_alias = dialogAddDeviceView.findViewById(R.id.view_dialog_node_alias_et);
                 final EditText node_location = dialogAddDeviceView.findViewById(R.id.view_dialog_node_location_et);
@@ -119,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
                 IOTDeviceInfos iotDeviceInfos = iotDeviceInfosList.get(parentPostion);
                 final int id = iotDeviceInfos.getId();
                 int preNodeType = iotDeviceInfos.getDnodetype();
-                String preNodeLabel = iotDeviceInfos.getDnodelabel();
+                final String preNodeLabel = iotDeviceInfos.getDnodelabel();
                 String preNodeAlias = iotDeviceInfos.getDname();
                 String preNodeLoation = iotDeviceInfos.getDlocation();
 
@@ -163,6 +167,17 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
                             device_name = "nodemcu_node_sensor_" + node_label_title;
                             temptopic = device_name + "/sensor/" + "nodemcu_" + node_label_title + "_temperature/state";
                             humtopic = device_name + "/sensor/" + "nodemcu_" + node_label_title + "_humidity/state";
+                        }
+
+                        //更换节点编号的时候需要校验编号是否会重复
+                        if(!preNodeLabel.equals(node_label_title)){
+                            List<IOTDeviceInfos> queryIOTList = LitePal.where("dnodename = ?", device_name).find(IOTDeviceInfos.class);
+
+                            if(!queryIOTList.isEmpty()){
+                                //已存在当前待添加设备
+                                Toast.makeText(MainActivity.this, "当前设备已存在", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
                         }
 
                         long currentTime = System.currentTimeMillis();
@@ -246,6 +261,8 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
                 dialog.getWindow().setAttributes(p);
 
                 final Spinner node_type = dialogAddDeviceView.findViewById(R.id.view_dialog_node_type_sp);
+                TextView dialog_title = dialogAddDeviceView.findViewById(R.id.view_dialog_control_title);
+                dialog_title.setText("新增设备");
                 final EditText node_label = dialogAddDeviceView.findViewById(R.id.view_dialog_node_label_et);
                 final EditText node_alias = dialogAddDeviceView.findViewById(R.id.view_dialog_node_alias_et);
                 final EditText node_location = dialogAddDeviceView.findViewById(R.id.view_dialog_node_location_et);
@@ -383,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
                 break;
             case R.id.action_about:
                 AlertDialog.Builder adb = new AlertDialog.Builder(MainActivity.this);
-                adb.setTitle("关于");
+                adb.setTitle("关于 v" + BuildConfig.VERSION_NAME);
                 adb.setMessage("软件基于MQTT协议,Eclipse Paho MQTT;\n图片素材取自阿里素材库;\nGithub：zouguo-eng");
                 adb.setPositiveButton("好的", new DialogInterface.OnClickListener() {
                     @Override
@@ -404,20 +421,16 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
 //        mqttService.toCreateNotification(message);
 
         long currentTime = System.currentTimeMillis();
-        String fTime = new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(currentTime);
+        String fTime = new SimpleDateFormat("MM-dd HH:mm:ss").format(currentTime);
 
         String[] topicArray = topic.split("/");
         String deviceName = topicArray[0];
-
-        Log.d("zouguo1","TOPIC：" + topic);
-        Log.d("zouguo","Topic设备名：" + deviceName);
 
         int nodeIndex = -1;
         for(int i = 0; i < iotDeviceInfosList.size(); i++){
             if(iotDeviceInfosList.get(i).getDnodename().equals(deviceName)){
                 //该Topic的DeviceName在节点列表中，位置为i
                 nodeIndex = i;
-                Log.d("zouguo","匹配到设备：" + nodeIndex);
             }
         }
 
@@ -442,12 +455,8 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
                 //更新nodeIndex设备的遥测数据
                 String deviceNode = topicArray[2];
 
-                Log.d("zouguo","更新节点State：" + deviceNode);
-
                 //判断是温度还是湿度
                 if(deviceNode.contains("_temperature")){
-                    Log.d("zouguo","更新温度");
-
                     RecyclerView.LayoutManager rvlm = main_rcv_listdevices.getLayoutManager();
 
                     String format_tem = "0";
@@ -465,7 +474,6 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
 
                     iotRecvlistAdapter.notifyItemChanged(nodeIndex, payloadList);
                 }else if(deviceNode.contains("_humidity")){
-                    Log.d("zouguo","更新湿度");
                     //湿度
                     payloadList.add(0,"state");
                     payloadList.add(1,1);//标记位--湿度
@@ -475,11 +483,9 @@ public class MainActivity extends AppCompatActivity implements IGetMessageCallBa
                     iotRecvlistAdapter.notifyItemChanged(nodeIndex, payloadList);
                 }else if(deviceNode.contains("_voltage")){
                     //电压
-                    float curVoltage = Float.valueOf(message) - 3.0f;
+                    float curVoltage = Float.valueOf(message) - 2.0f;
                     float curVoltages = curVoltage * 10;
                     int curPower = Math.round(curVoltages);
-
-                    Log.d("zouguo","更新电压" + curPower);
 
                     //电压
                     payloadList.add(0,"state");

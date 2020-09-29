@@ -34,9 +34,9 @@ public class MQTTService extends Service {
     private MqttConnectOptions conOpt;
     private IGetMessageCallBack IGetMessageCallBack;
 
-    private String host = "tcp://xxx:xxx";
-    private String userName = "xxx";
-    private String passWord = "xxx";
+    private String host = "tcp://hvss.me:18983";
+    private String userName = "wzyshine";
+    private String passWord = "wzyshinemqtt10086";
 
     private static String publishTopic = "appnotify";    //发布消息到该Topic
     private static String nodeStatusTopic = "+/status";      //订阅节点状态主题，OnLine和OffLine
@@ -201,7 +201,7 @@ public class MQTTService extends Service {
                 IGetMessageCallBack.setMessageArrived(topic, str1, str2);
             }
 
-            Log.i(TAG, "messageArrived:" + str1);
+//            Log.i(TAG, "messageArrived:" + str1);
         }
 
         @Override

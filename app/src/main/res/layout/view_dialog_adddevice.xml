@@ -6,13 +6,14 @@
     android:background="@drawable/view_dialog_background">
 
     <TextView
+        android:id="@+id/view_dialog_control_title"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
         android:paddingLeft="10dp"
         android:background="@drawable/view_dialog_title_background"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/add_device"
+        android:text="@string/app_name"
         android:textSize="18sp"
         android:textColor="#FFFFFF"/>
 

@@ -6,6 +6,7 @@
     <string name="action_about">关于</string>
     
     <string name="add_device">新增设备</string>
+    <string name="control_device">设备操作</string>
     <string name="node_type">节点类型</string>
     <string name="node_label">节点编号</string>
     <string name="node_alias">节点别名</string>

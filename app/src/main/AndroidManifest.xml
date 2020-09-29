@@ -35,5 +35,33 @@
 
         <!-- Mqtt服务 -->
         <service android:name="org.eclipse.paho.android.service.MqttService" />
+
+        <!--桌面组件Alpha-->
+        <receiver android:name=".widget.MyAppWidgetProviderAlpha" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="com.zouguo.iothumtemp.widget.UPDATE_ALL"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/app_widget_provider_alpha"/>
+        </receiver>
+        <!--桌面组件Belta-->
+        <receiver android:name=".widget.MyAppWidgetProviderBelta" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/app_widget_provider_belta"/>
+        </receiver>
+        
+        <service android:name=".widget.AppWidgetService"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.WIDGET_SERVICE_INTENT"/>
+            </intent-filter>
+        </service>
     </application>
 </manifest>

@@ -53,21 +53,19 @@ public class IOTRecvlistAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(@NonNull final RecyclerView.ViewHolder viewHolder, int position) {
-        Log.d("zouguo","刷新数据：" + position);
-
         IOTDeviceInfos iotDeviceInfos = iotDeviceInfosList.get(position);
         ((MyViewHolder)viewHolder).item_recv_devices_name.setText(iotDeviceInfos.getDname());
         ((MyViewHolder)viewHolder).item_recv_devices_temp.setText(iotDeviceInfos.getDtemp());
         ((MyViewHolder)viewHolder).item_recv_devices_hum.setText(iotDeviceInfos.getDhum());
         ((MyViewHolder)viewHolder).item_recv_devices_freshtime.setText(iotDeviceInfos.getDtime());
-        ((MyViewHolder)viewHolder).item_recv_devices_online.setImageResource(onlineStatus[iotDeviceInfos.getDstatus()]);
+        ((MyViewHolder)viewHolder).item_recv_devices_online.setImageResource(onlineStatus[2]);
         ((MyViewHolder)viewHolder).item_recv_devices_location.setText(iotDeviceInfos.getDlocation());
 
         ((MyViewHolder)viewHolder).item_recv_devices_fold_name.setText(iotDeviceInfos.getDname());
         ((MyViewHolder)viewHolder).item_recv_devices_fold_temp.setText(iotDeviceInfos.getDtemp());
         ((MyViewHolder)viewHolder).item_recv_devices_fold_hum.setText(iotDeviceInfos.getDhum());
         ((MyViewHolder)viewHolder).item_recv_devices_fold_freshtime.setText(iotDeviceInfos.getDtime());
-        ((MyViewHolder)viewHolder).item_recv_devices_fold_online.setImageResource(onlineStatus[iotDeviceInfos.getDstatus()]);
+        ((MyViewHolder)viewHolder).item_recv_devices_fold_online.setImageResource(onlineStatus[2]);
 
         if(onItemListener != null){
             viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -105,31 +103,26 @@ public class IOTRecvlistAdapter extends RecyclerView.Adapter {
             //无载荷
             onBindViewHolder(viewHolder, position);
         }else{
-            Log.d("zouguo","更新位置：" + position + "，载荷：" + payloads.toString());
             List payloadList = (List) payloads.get(0);
             String loadsType = payloadList.get(0).toString();
-            Log.d("zouguo","更新loadsType：" + loadsType);
 
             if(loadsType.equals("status")){
                 //更新节点设备在线状态
                 int loadsLabel = Integer.parseInt(payloadList.get(1).toString());
                 String loadsTime = payloadList.get(2).toString();
 
-                Log.d("zouguo","更新status：" + loadsLabel);
-
                 ((MyViewHolder)viewHolder).item_recv_devices_online.setImageResource(onlineStatus[loadsLabel]);
-                ((MyViewHolder)viewHolder).item_recv_devices_freshtime.setText(loadsTime);
-
                 ((MyViewHolder)viewHolder).item_recv_devices_fold_online.setImageResource(onlineStatus[loadsLabel]);
-                ((MyViewHolder)viewHolder).item_recv_devices_fold_freshtime.setText(loadsTime);
+
+                if(loadsLabel == 1){
+                    ((MyViewHolder)viewHolder).item_recv_devices_freshtime.setText(loadsTime);
+                    ((MyViewHolder)viewHolder).item_recv_devices_fold_freshtime.setText(loadsTime);
+                }
             }else if(loadsType.equals("state")){
                 //更新节点设备遥测数据，同时更新在线状态
                 int loadsLabel = Integer.parseInt(payloadList.get(1).toString());
                 String loadsData = payloadList.get(2).toString();
                 String loadsTime = payloadList.get(3).toString();
-
-                Log.d("zouguo","更新loadsLabel：" + loadsLabel);
-                Log.d("zouguo","更新loadsData：" + loadsData);
 
                 if(loadsLabel == 0){
                     //更新温度
@@ -143,8 +136,13 @@ public class IOTRecvlistAdapter extends RecyclerView.Adapter {
                     ((MyViewHolder)viewHolder).item_recv_devices_fold_hum.setText(loadsData);
                 }else if(loadsLabel == 2){
                     //更新电压
-                    Log.d("zouguo1","更新电压：" + Integer.parseInt(loadsData));
-                    ((MyViewHolder)viewHolder).item_recv_devices_voltage.setProgress(Integer.parseInt(loadsData));
+                    int nowVoltage = Integer.parseInt(loadsData);
+
+                    int maxVoltage = ((MyViewHolder)viewHolder).item_recv_devices_voltage.getMax();
+                    if(nowVoltage > maxVoltage){
+                        nowVoltage = maxVoltage;
+                    }
+                    ((MyViewHolder)viewHolder).item_recv_devices_voltage.setProgress(nowVoltage);
                 }
 
                 //收到数据，直接更新在线状态
